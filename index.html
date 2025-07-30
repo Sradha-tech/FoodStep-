@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GourmetGo - Your Favorite Food, Delivered.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- sql.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-asm.js"></script>
+    <style>
+        /* Custom Styles for GourmetGo */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Lighter gray background */
+        }
+
+        .hero-bg {
+            background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://placehold.co/1600x800/334155/ffffff?text=Exquisite+Cuisine');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-content {
+            transition: transform 0.3s ease;
+        }
+
+        .quantity-btn {
+            transition: background-color 0.2s ease;
+        }
+
+        .quantity-btn:hover {
+            background-color: #e2e8f0;
+        }
+
+        .filter-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .filter-btn.active {
+            background-color: #f97316; /* Primary Orange */
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .saved-address-item .address-details:hover {
+            background-color: #f8fafc;
+        }
+
+        /* Professional Input Styling */
+        input[type="text"], input[type="email"], input[type="password"], input[type="number"], select {
+            border-color: #cbd5e1;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        input:focus, select:focus {
+            --tw-ring-color: #fb923c; /* Lighter orange for focus ring */
+            border-color: #f97316;
+            box-shadow: 0 0 0 1px #f97316;
+        }
+
+        /* Professional Button Styling */
+        .btn-primary {
+            background-color: #f97316;
+            color: white;
+            font-weight: 600;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+        .btn-primary:hover {
+            background-color: #ea580c;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+             background-color: #e2e8f0;
+             color: #1e293b;
+             font-weight: 600;
+             transition: background-color 0.2s ease;
+        }
+        .btn-secondary:hover {
+            background-color: #cbd5e1;
+        }
+
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- User Application Page -->
+    <div id="userPage">
+        <!-- Header -->
+        <header class="bg-white shadow-sm sticky top-0 z-40">
+            <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <a href="#" class="text-2xl font-bold text-orange-600">GourmetGo</a>
+                <div class="hidden md:flex items-center space-x-6">
+                    <div class="relative">
+                        <input id="searchInput" type="text" placeholder="Search for food or restaurants..." class="px-4 py-2 border rounded-full focus:outline-none w-72">
+                        <span class="absolute top-3 right-4 text-slate-400"><i class="fas fa-search"></i></span>
+                    </div>
+                    <button id="locationBtn" class="flex items-center text-slate-600 hover:text-orange-600 transition-colors">
+                        <i class="fas fa-map-marker-alt mr-2"></i>
+                        <span id="locationText" class="font-medium">Select Location</span>
+                    </button>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="cartButton" class="relative text-slate-600 hover:text-orange-600 transition-colors">
+                        <i class="fas fa-shopping-cart fa-lg"></i>
+                        <span id="cartCounter" class="absolute -top-2 -right-2 bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+                    </button>
+                    
+                    <!-- Auth Buttons / User Profile -->
+                    <div id="authContainer" class="flex items-center space-x-2">
+                        <button id="loginBtn" class="px-4 py-2 text-sm font-medium text-slate-700 hover:text-orange-600">Login</button>
+                        <button id="signupBtn" class="btn-primary px-4 py-2 text-sm rounded-full">Sign Up</button>
+                    </div>
+                    <div id="userProfile" class="hidden relative">
+                        <button id="userProfileBtn" class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-slate-500"></i>
+                            </div>
+                            <span id="userEmail" class="text-sm font-medium text-slate-700"></span>
+                            <i class="fas fa-chevron-down text-xs text-slate-500"></i>
+                        </button>
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border">
+                            <a href="#" id="orderHistoryBtn" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Order History</a>
+                            <a href="#" id="logoutBtn" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Logout</a>
+                        </div>
+                    </div>
+
+                     <button class="md:hidden text-gray-600 hover:text-orange-500">
+                        <i class="fas fa-bars fa-lg"></i>
+                    </button>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Hero Section -->
+            <section class="hero-bg text-white">
+                <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 text-center">
+                    <h1 class="text-4xl md:text-6xl font-bold mb-4">Craving something delicious?</h1>
+                    <p class="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-slate-200">Get your favorite meals delivered hot and fresh to your doorstep. Fast, easy, and convenient.</p>
+                    <a href="#menu" class="btn-primary py-3 px-8 rounded-full text-lg">Order Now</a>
+                </div>
+            </section>
+
+            <!-- Menu Section -->
+            <section id="menu" class="py-16">
+                <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 class="text-3xl font-bold text-center mb-2">Our Menu</h2>
+                    <p class="text-center text-slate-500 mb-10">Explore our wide range of dishes, from classic comforts to exotic flavors.</p>
+                    
+                    <!-- Diet Preference Filter -->
+                    <div id="dietFilter" class="flex justify-center space-x-2 sm:space-x-4 mb-10">
+                        <button data-filter="all" class="filter-btn active px-4 py-2 rounded-full border border-orange-500 text-orange-500">All</button>
+                        <button data-filter="veg" class="filter-btn px-4 py-2 rounded-full border border-green-500 text-green-500">Veg</button>
+                        <button data-filter="non-veg" class="filter-btn px-4 py-2 rounded-full border border-red-500 text-red-500">Non-Veg</button>
+                    </div>
+
+                    <div id="menuItems" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                        <!-- Food items will be injected here by JavaScript -->
+                    </div>
+                     <div id="noResults" class="hidden text-center text-slate-500 mt-8">
+                        <i class="fas fa-search fa-3x mb-4"></i>
+                        <p class="text-xl">No food items match your search.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-slate-800 text-white pt-12">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div>
+                        <h3 class="text-lg font-bold mb-4">GourmetGo</h3>
+                        <p class="text-slate-400">Your daily dose of deliciousness, delivered right to you.</p>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                        <ul>
+                            <li class="mb-2"><a href="#" class="text-slate-400 hover:text-white">Home</a></li>
+                            <li class="mb-2"><a href="#menu" class="text-slate-400 hover:text-white">Menu</a></li>
+                            <li class="mb-2"><a href="#" class="text-slate-400 hover:text-white">About Us</a></li>
+                            <li class="mb-2"><a href="#" class="text-slate-400 hover:text-white">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Follow Us</h3>
+                        <div class="flex space-x-4">
+                            <a href="#" class="text-slate-400 hover:text-white"><i class="fab fa-facebook-f fa-lg"></i></a>
+                            <a href="#" class="text-slate-400 hover:text-white"><i class="fab fa-twitter fa-lg"></i></a>
+                            <a href="#" class="text-slate-400 hover:text-white"><i class="fab fa-instagram fa-lg"></i></a>
+                        </div>
+                    </div>
+                     <div>
+                        <h3 class="text-lg font-semibold mb-4">Contact Us</h3>
+                        <p class="text-slate-400">123 Foodie Lane, New York, NY</p>
+                        <p class="text-slate-400">Email: support@gourmetgo.com</p>
+                        <p class="text-slate-400">Phone: (123) 456-7890</p>
+                    </div>
+                </div>
+                <div class="border-t border-slate-700 mt-8 py-6 text-center text-slate-500">
+                    &copy; 2024 GourmetGo. All Rights Reserved.
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Location Management Page -->
+    <div id="locationPage" class="hidden">
+        <header class="bg-white shadow-sm">
+            <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-slate-800">Manage Locations</h1>
+                <button id="backToMenuBtn" class="text-orange-600 font-medium hover:underline">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Menu
+                </button>
+            </nav>
+        </header>
+        <main class="container mx-auto p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Saved Addresses Column -->
+                <div class="md:col-span-1">
+                    <h3 class="text-lg font-semibold mb-4 border-b pb-2">Your Saved Addresses</h3>
+                    <div id="savedAddressesList" class="space-y-3 max-h-96 overflow-y-auto">
+                        <!-- Saved addresses will be injected here -->
+                    </div>
+                </div>
+                <!-- Add New Address Column -->
+                <div class="md:col-span-2">
+                    <h3 class="text-lg font-semibold mb-4 border-b pb-2">Add a New Address</h3>
+                    <p class="text-sm text-slate-600 mb-4">Find your address on the map, then fill out the details below.</p>
+                    <iframe 
+                        id="gmap-iframe"
+                        class="w-full h-64 rounded-lg border-0"
+                        loading="lazy"
+                        allowfullscreen
+                        referrerpolicy="no-referrer-when-downgrade"
+                        src="https://maps.google.com/maps?q=Bengaluru&t=&z=13&ie=UTF8&iwloc=&output=embed">
+                    </iframe>
+                    <form id="newAddressForm" class="mt-4 space-y-3">
+                        <div>
+                            <label for="addressLabel" class="block text-sm font-medium text-slate-700">Label (e.g., Home, Work)</label>
+                            <input type="text" id="addressLabel" class="mt-1 block w-full border-slate-300 rounded-md shadow-sm" required>
+                        </div>
+                        <div>
+                            <label for="manualAddressInput" class="block text-sm font-medium text-slate-700">Full Address</label>
+                            <input type="text" id="manualAddressInput" class="mt-1 block w-full border-slate-300 rounded-md shadow-sm" required>
+                        </div>
+                         <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="manualCityInput" class="block text-sm font-medium text-slate-700">City</label>
+                                <input type="text" id="manualCityInput" class="mt-1 block w-full border-slate-300 rounded-md shadow-sm" required>
+                            </div>
+                            <div>
+                                <label for="manualZipInput" class="block text-sm font-medium text-slate-700">Zip Code</label>
+                                <input type="text" id="manualZipInput" class="mt-1 block w-full border-slate-300 rounded-md shadow-sm" required>
+                            </div>
+                        </div>
+                        <div class="text-right pt-2">
+                           <button type="submit" class="btn-primary py-2 px-6 rounded-lg">Save & Select Address</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Order Confirmation Page -->
+    <div id="orderConfirmationPage" class="hidden">
+        <header class="bg-white shadow-sm">
+            <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-orange-600">GourmetGo</h1>
+            </nav>
+        </header>
+        <main class="container mx-auto p-6 text-center">
+            <div class="max-w-2xl mx-auto">
+                <div class="text-green-500 mb-4">
+                    <i class="fas fa-check-circle fa-5x"></i>
+                </div>
+                <h2 class="text-3xl font-bold mb-2">Order Placed</h2>
+                <p class="text-slate-600 mb-6">Your order is placed and will arrive soon.</p>
+                <div id="confirmationOrderSummary" class="text-left bg-slate-50 p-4 rounded-lg mb-6 border">
+                    <!-- Order summary will be injected here -->
+                </div>
+                <button id="continueShoppingBtn" class="btn-primary w-full py-3 px-4 rounded-lg">Continue Shopping</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Seller Dashboard Page -->
+    <div id="sellerDashboardPage" class="hidden">
+        <header class="bg-white shadow-sm">
+            <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">Seller Dashboard</h1>
+                    <p id="sellerRestaurantName" class="text-sm text-slate-500"></p>
+                </div>
+                <button id="sellerLogoutBtn" class="text-orange-600 font-medium hover:underline">Logout</button>
+            </nav>
+        </header>
+        <main class="container mx-auto p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Add Product Section -->
+                <div class="md:col-span-1">
+                    <div class="bg-white p-6 rounded-lg shadow-md border">
+                        <h3 class="text-xl font-bold mb-4">Add New Product</h3>
+                        <form id="addProductForm" class="space-y-4">
+                            <div>
+                                <label for="productName" class="block text-sm font-medium">Name</label>
+                                <input type="text" id="productName" class="mt-1 w-full border-slate-300 rounded-md shadow-sm" required>
+                            </div>
+                            <div>
+                                <label for="productPrice" class="block text-sm font-medium">Price (₹)</label>
+                                <input type="number" id="productPrice" class="mt-1 w-full border-slate-300 rounded-md shadow-sm" required>
+                            </div>
+                            <div>
+                                <label for="productCategory" class="block text-sm font-medium">Category</label>
+                                <input type="text" id="productCategory" class="mt-1 w-full border-slate-300 rounded-md shadow-sm" required>
+                            </div>
+                             <div>
+                                <label for="productImage" class="block text-sm font-medium">Image URL</label>
+                                <input type="text" id="productImage" class="mt-1 w-full border-slate-300 rounded-md shadow-sm" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium">Type</label>
+                                <div class="flex gap-4 mt-1">
+                                    <label><input type="radio" name="productType" value="veg" checked> Veg</label>
+                                    <label><input type="radio" name="productType" value="non-veg"> Non-Veg</label>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-primary w-full py-2 rounded-lg">Add Product</button>
+                        </form>
+                    </div>
+                </div>
+                <!-- My Products & Orders -->
+                <div class="md:col-span-2 space-y-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md border">
+                        <h3 class="text-xl font-bold mb-4">My Products</h3>
+                        <div id="sellerProductsList" class="max-h-64 overflow-y-auto space-y-3"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md border">
+                        <h3 class="text-xl font-bold mb-4">Incoming Orders</h3>
+                        <div id="sellerOrdersList" class="max-h-96 overflow-y-auto space-y-4"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+
+    <!-- MODALS (for main page) -->
+    
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="modal-content bg-white rounded-lg shadow-xl w-11/12 sm:w-96 transform scale-95 border">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h2 id="authTitle" class="text-2xl font-bold">Login</h2>
+                <button id="closeAuth" class="text-slate-500 hover:text-slate-800 text-3xl leading-none">&times;</button>
+            </div>
+            <div class="p-6">
+                <form id="authForm">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="authEmail" class="block text-sm font-medium text-slate-700">Email</label>
+                            <input type="email" id="authEmail" class="mt-1 block w-full border-slate-300 rounded-md shadow-sm" required>
+                        </div>
+                        <div>
+                            <label for="authPassword" class="block text-sm font-medium text-slate-700">Password</label>
+                            <input type="password" id="authPassword" class="mt-1 block w-full border-slate-300 rounded-md shadow-sm" required>
+                        </div>
+                        <div id="roleSelection" class="hidden">
+                             <label class="block text-sm font-medium text-slate-700">Register as</label>
+                             <div class="flex gap-4 mt-1">
+                                <label><input type="radio" name="role" value="user" checked> User</label>
+                                <label><input type="radio" name="role" value="seller"> Seller</label>
+                            </div>
+                        </div>
+                        <div id="restaurantNameInput" class="hidden">
+                            <label for="restaurantName" class="block text-sm font-medium text-slate-700">Restaurant Name</label>
+                            <input type="text" id="restaurantName" class="mt-1 block w-full border-slate-300 rounded-md shadow-sm">
+                        </div>
+                    </div>
+                    <p id="authError" class="text-red-500 text-sm mt-2"></p>
+                    <div class="mt-6">
+                        <button type="submit" id="authSubmitBtn" class="btn-primary w-full py-3 px-4 rounded-lg">Login</button>
+                    </div>
+                </form>
+                <p class="text-sm text-center mt-4">
+                    <span id="authToggleText">Don't have an account?</span>
+                    <button id="authToggleBtn" class="font-medium text-orange-600 hover:underline">Sign Up</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Modal -->
+    <div id="cartModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="modal-content bg-white rounded-lg shadow-xl w-11/12 md:w-2/3 lg:w-1/2 max-w-4xl transform scale-95 border">
+            <div class="p-6 border-b">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">Your Cart</h2>
+                    <button id="closeCart" class="text-slate-500 hover:text-slate-800 text-3xl leading-none">&times;</button>
+                </div>
+            </div>
+            <div id="cartContent" class="p-6 max-h-[60vh] overflow-y-auto"></div>
+            <div id="cartFooter" class="p-6 bg-slate-50 border-t rounded-b-lg"></div>
+        </div>
+    </div>
+    
+    <!-- Checkout Modal -->
+    <div id="checkoutModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="modal-content bg-white rounded-lg shadow-xl w-11/12 md:w-2/3 lg:w-1/2 max-w-2xl transform scale-95 border">
+            <div class="p-6 border-b">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">Checkout</h2>
+                    <button id="closeCheckout" class="text-slate-500 hover:text-slate-800 text-3xl leading-none">&times;</button>
+                </div>
+            </div>
+            <div class="p-6 max-h-[80vh] overflow-y-auto">
+                <form id="checkoutForm">
+                    <!-- Delivery Details -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label for="address" class="block text-sm font-medium text-slate-700">Delivery Address</label>
+                            <input type="text" id="address" class="mt-1 block w-full border-slate-300 rounded-md shadow-sm bg-slate-100" readonly required>
+                        </div>
+                        <div>
+                            <label for="city" class="block text-sm font-medium text-slate-700">City</label>
+                            <input type="text" id="city" class="mt-1 block w-full border-slate-300 rounded-md shadow-sm bg-slate-100" readonly required>
+                        </div>
+                        <div>
+                            <label for="zip" class="block text-sm font-medium text-slate-700">Zip Code</label>
+                            <input type="text" id="zip" class="mt-1 block w-full border-slate-300 rounded-md shadow-sm bg-slate-100" readonly required>
+                        </div>
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-slate-700">Full Name</label>
+                            <input type="text" id="name" class="mt-1 block w-full border-slate-300 rounded-md shadow-sm" required>
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-slate-700">Email Address</label>
+                            <input type="email" id="email" class="mt-1 block w-full border-slate-300 rounded-md shadow-sm bg-slate-100" readonly required>
+                        </div>
+                    </div>
+
+                    <!-- Payment Details -->
+                    <div class="mt-6">
+                        <h3 class="font-bold text-lg mb-4 border-t pt-4">Payment Method</h3>
+                        <div class="space-y-4">
+                            <!-- Payment Options -->
+                            <div class="flex flex-wrap gap-4" id="paymentOptions">
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer flex-1"><input type="radio" name="paymentMethod" value="card" class="mr-2" checked> Card</label>
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer flex-1"><input type="radio" name="paymentMethod" value="upi" class="mr-2"> UPI</label>
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer flex-1"><input type="radio" name="paymentMethod" value="netbanking" class="mr-2"> Net Banking</label>
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer flex-1"><input type="radio" name="paymentMethod" value="cash" class="mr-2"> Cash</label>
+                            </div>
+
+                            <!-- Dynamic Payment Forms -->
+                            <div id="cardPaymentForm" class="space-y-3 border p-4 rounded-lg">
+                                <input type="text" id="card-number" placeholder="Card Number" class="block w-full border-slate-300 rounded-md shadow-sm" required>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <input type="text" id="expiry" placeholder="MM/YY" class="block w-full border-slate-300 rounded-md shadow-sm" required>
+                                    <input type="text" id="cvc" placeholder="CVC" class="block w-full border-slate-300 rounded-md shadow-sm" required>
+                                </div>
+                            </div>
+                            <div id="upiPaymentForm" class="hidden space-y-3 border p-4 rounded-lg">
+                                <input type="text" id="upi-id" placeholder="Enter UPI ID" class="block w-full border-slate-300 rounded-md shadow-sm" required>
+                            </div>
+                            <div id="netbankingPaymentForm" class="hidden space-y-3 border p-4 rounded-lg">
+                                <select id="netbanking-bank" class="block w-full border-slate-300 rounded-md shadow-sm" required>
+                                    <option>Select Bank</option>
+                                    <option>State Bank of India</option>
+                                    <option>HDFC Bank</option>
+                                    <option>ICICI Bank</option>
+                                    <option>Axis Bank</option>
+                                </select>
+                            </div>
+                            <div id="cashPaymentForm" class="hidden border p-4 rounded-lg bg-slate-50">
+                                <p class="text-sm text-slate-700">Please keep exact change ready for the delivery person.</p>
+                            </div>
+
+                            <!-- Split Payment -->
+                            <div id="splitPaymentContainer" class="border-t pt-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="splitPaymentCheckbox" class="mr-2 h-4 w-4">
+                                    <span class="text-sm font-medium">Split Payment (Cash + Online)</span>
+                                </label>
+                                <div id="splitPaymentDetails" class="hidden mt-3 space-y-3 border p-4 rounded-lg bg-slate-50">
+                                    <div>
+                                        <label for="cashAmount" class="block text-sm font-medium text-slate-700">Amount to Pay in Cash</label>
+                                        <input type="number" id="cashAmount" class="mt-1 block w-full border-slate-300 rounded-md shadow-sm" placeholder="e.g., 100">
+                                    </div>
+                                    <div class="text-sm">
+                                        <p>Total Bill: <span id="splitTotalBill" class="font-semibold"></span></p>
+                                        <p>Remaining Online: <span id="splitRemainingOnline" class="font-semibold text-green-600"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <button type="submit" id="placeOrderBtn" class="btn-primary w-full py-3 px-4 rounded-lg">
+                            Place Order
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Order History Modal -->
+    <div id="orderHistoryModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="modal-content bg-white rounded-lg shadow-xl w-11/12 md:w-2/3 lg:w-1/2 max-w-4xl transform scale-95 border">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h2 class="text-2xl font-bold">Your Order History</h2>
+                <button id="closeOrderHistory" class="text-slate-500 hover:text-slate-800 text-3xl leading-none">&times;</button>
+            </div>
+            <div id="orderHistoryContent" class="p-6 max-h-[70vh] overflow-y-auto">
+                <!-- Order history will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 transition-opacity duration-300">
+        Item added to cart!
+    </div>
+    
+    <script>
+        // --- SQL.js LOGIC ---
+        let db;
+        
+        async function initDatabase() {
+            try {
+                const SQL = await initSqlJs({
+                    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
+                });
+                
+                const savedDb = localStorage.getItem('gourmetgo_db');
+                if (savedDb) {
+                    const Uints = savedDb.split(',').map(Number);
+                    db = new SQL.Database(new Uint8Array(Uints));
+                } else {
+                    db = new SQL.Database();
+                    createTables();
+                    seedDatabase();
+                }
+            } catch (err) {
+                console.error("Failed to initialize database:", err);
+            }
+        }
+
+        function createTables() {
+            const sql = `
+                CREATE TABLE users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    email TEXT UNIQUE,
+                    password TEXT,
+                    role TEXT
+                );
+                CREATE TABLE sellers (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER UNIQUE,
+                    restaurant_name TEXT
+                );
+                CREATE TABLE products (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    seller_id INTEGER,
+                    name TEXT,
+                    price REAL,
+                    category TEXT,
+                    image TEXT,
+                    type TEXT
+                );
+                CREATE TABLE user_addresses (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    label TEXT,
+                    address TEXT,
+                    city TEXT,
+                    zip TEXT
+                );
+                CREATE TABLE carts (
+                    user_id INTEGER,
+                    item_id INTEGER,
+                    quantity INTEGER,
+                    PRIMARY KEY (user_id, item_id)
+                );
+                CREATE TABLE orders (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    address TEXT,
+                    city TEXT,
+                    zip TEXT,
+                    total REAL,
+                    payment_method TEXT,
+                    amount_paid_online REAL,
+                    amount_paid_cash REAL,
+                    created_at TEXT
+                );
+                CREATE TABLE order_items (
+                    order_id INTEGER,
+                    item_id INTEGER,
+                    seller_id INTEGER,
+                    name TEXT,
+                    price REAL,
+                    quantity INTEGER
+                );
+            `;
+            db.run(sql);
+        }
+
+        function seedDatabase() {
+            try {
+                // Seed Sellers
+                db.run("INSERT INTO users (email, password, role) VALUES ('seller1@example.com', 'password', 'seller'), ('seller2@example.com', 'password', 'seller');");
+                db.run("INSERT INTO sellers (user_id, restaurant_name) VALUES (1, 'Biryani House'), (2, 'Pizza Palace');");
+                
+                // Seed Products
+                const productsSql = `
+                    INSERT INTO products (seller_id, name, price, category, image, type) VALUES
+                    (1, 'Chicken Dum Biryani', 350, 'Indian', 'https://placehold.co/300x200/f97316/ffffff?text=Chicken+Biryani', 'non-veg'),
+                    (1, 'Paneer Biryani', 300, 'Indian', 'https://placehold.co/300x200/84cc16/ffffff?text=Paneer+Biryani', 'veg'),
+                    (2, 'Pepperoni Pizza', 550, 'Italian', 'https://placehold.co/300x200/ef4444/ffffff?text=Pepperoni+Pizza', 'non-veg'),
+                    (2, 'Margherita Pizza', 450, 'Italian', 'https://placehold.co/300x200/f87171/ffffff?text=Margherita', 'veg'),
+                    (1, 'Mutton Kebab', 420, 'Indian', 'https://placehold.co/300x200/a16207/ffffff?text=Kebab', 'non-veg'),
+                    (2, 'Veggie Supreme Pizza', 480, 'Italian', 'https://placehold.co/300x200/22c55e/ffffff?text=Veggie+Pizza', 'veg');
+                `;
+                db.run(productsSql);
+
+                persistDatabase();
+            } catch(e) {
+                console.error("Error seeding database:", e);
+            }
+        }
+
+        function persistDatabase() {
+            const data = db.export();
+            localStorage.setItem('gourmetgo_db', Array.from(data));
+        }
+
+        // --- DATA & STATE ---
+        let cart = [];
+        let currentDietFilter = 'all';
+        let selectedAddress = null; // Will store { id, label, address, city, zip }
+        let currentUser = null; // Will store { id, email, role, sellerId }
+
+        // --- ELEMENT SELECTORS ---
+        const userPage = document.getElementById('userPage');
+        const locationPage = document.getElementById('locationPage');
+        const orderConfirmationPage = document.getElementById('orderConfirmationPage');
+        const sellerDashboardPage = document.getElementById('sellerDashboardPage');
+
+        const searchInput = document.getElementById('searchInput');
+        const dietFilterContainer = document.getElementById('dietFilter');
+        const menuItemsContainer = document.getElementById('menuItems');
+        const noResultsDiv = document.getElementById('noResults');
+        const cartButton = document.getElementById('cartButton');
+        const cartCounter = document.getElementById('cartCounter');
+        const locationBtn = document.getElementById('locationBtn');
+        const locationText = document.getElementById('locationText');
+        const toast = document.getElementById('toast');
+
+        // Auth Elements
+        const authContainer = document.getElementById('authContainer');
+        const loginBtn = document.getElementById('loginBtn');
+        const signupBtn = document.getElementById('signupBtn');
+        const userProfile = document.getElementById('userProfile');
+        const userProfileBtn = document.getElementById('userProfileBtn');
+        const userEmailSpan = document.getElementById('userEmail');
+        const userDropdown = document.getElementById('userDropdown');
+        const orderHistoryBtn = document.getElementById('orderHistoryBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        // Modal Elements
+        const authModal = document.getElementById('authModal');
+        const closeAuth = document.getElementById('closeAuth');
+        const authTitle = document.getElementById('authTitle');
+        const authForm = document.getElementById('authForm');
+        const authEmailInput = document.getElementById('authEmail');
+        const authPasswordInput = document.getElementById('authPassword');
+        const authError = document.getElementById('authError');
+        const authSubmitBtn = document.getElementById('authSubmitBtn');
+        const authToggleText = document.getElementById('authToggleText');
+        const authToggleBtn = document.getElementById('authToggleBtn');
+        const roleSelection = document.getElementById('roleSelection');
+        const restaurantNameInput = document.getElementById('restaurantNameInput');
+
+        const cartModal = document.getElementById('cartModal');
+        const closeCart = document.getElementById('closeCart');
+        const cartContent = document.getElementById('cartContent');
+        const cartFooter = document.getElementById('cartFooter');
+        
+        const checkoutModal = document.getElementById('checkoutModal');
+        const closeCheckout = document.getElementById('closeCheckout');
+        const checkoutForm = document.getElementById('checkoutForm');
+        const placeOrderBtn = document.getElementById('placeOrderBtn');
+        
+        const newAddressForm = document.getElementById('newAddressForm');
+        const savedAddressesList = document.getElementById('savedAddressesList');
+        const backToMenuBtn = document.getElementById('backToMenuBtn');
+        
+        const confirmationOrderSummary = document.getElementById('confirmationOrderSummary');
+        const continueShoppingBtn = document.getElementById('continueShoppingBtn');
+
+        const orderHistoryModal = document.getElementById('orderHistoryModal');
+        const closeOrderHistory = document.getElementById('closeOrderHistory');
+        const orderHistoryContent = document.getElementById('orderHistoryContent');
+
+        // Seller Dashboard Elements
+        const sellerRestaurantName = document.getElementById('sellerRestaurantName');
+        const sellerLogoutBtn = document.getElementById('sellerLogoutBtn');
+        const addProductForm = document.getElementById('addProductForm');
+        const sellerProductsList = document.getElementById('sellerProductsList');
+        const sellerOrdersList = document.getElementById('sellerOrdersList');
+
+        // Payment Form Elements
+        const paymentOptions = document.getElementById('paymentOptions');
+        const cardPaymentForm = document.getElementById('cardPaymentForm');
+        const upiPaymentForm = document.getElementById('upiPaymentForm');
+        const netbankingPaymentForm = document.getElementById('netbankingPaymentForm');
+        const cashPaymentForm = document.getElementById('cashPaymentForm');
+        const splitPaymentContainer = document.getElementById('splitPaymentContainer');
+        const splitPaymentCheckbox = document.getElementById('splitPaymentCheckbox');
+        const splitPaymentDetails = document.getElementById('splitPaymentDetails');
+        const cashAmountInput = document.getElementById('cashAmount');
+        const splitTotalBillSpan = document.getElementById('splitTotalBill');
+        const splitRemainingOnlineSpan = document.getElementById('splitRemainingOnline');
+
+
+        // --- PAGE NAVIGATION ---
+        function showPage(pageToShow) {
+            userPage.classList.add('hidden');
+            locationPage.classList.add('hidden');
+            orderConfirmationPage.classList.add('hidden');
+            sellerDashboardPage.classList.add('hidden');
+            pageToShow.classList.remove('hidden');
+        }
+
+        // --- AUTHENTICATION (SQL) ---
+        
+        let isLoginMode = true;
+
+        function setupAuthModal(loginMode) {
+            isLoginMode = loginMode;
+            authTitle.textContent = isLoginMode ? 'Login' : 'Sign Up';
+            authSubmitBtn.textContent = isLoginMode ? 'Login' : 'Sign Up';
+            authToggleText.textContent = isLoginMode ? "Don't have an account?" : "Already have an account?";
+            authToggleBtn.textContent = isLoginMode ? 'Sign Up' : 'Login';
+            roleSelection.classList.toggle('hidden', isLoginMode);
+            restaurantNameInput.classList.add('hidden');
+            authError.textContent = '';
+        }
+
+        function handleLogin(user) {
+            currentUser = user;
+            sessionStorage.setItem('gourmetgo_user', JSON.stringify(user));
+            if (user.role === 'seller') {
+                showPage(sellerDashboardPage);
+                loadSellerDashboard();
+            } else {
+                showPage(userPage);
+                updateUserUI(user);
+            }
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            sessionStorage.removeItem('gourmetgo_user');
+            updateUserUI(null);
+            showPage(userPage);
+        }
+
+        function updateUserUI(user) {
+             if (user && user.role === 'user') {
+                authContainer.classList.add('hidden');
+                userProfile.classList.remove('hidden');
+                userEmailSpan.textContent = user.email;
+                document.getElementById('email').value = user.email;
+                loadCartFromDb();
+            } else {
+                authContainer.classList.remove('hidden');
+                userProfile.classList.add('hidden');
+                userEmailSpan.textContent = '';
+                cart = [];
+                updateCartCounter();
+                renderCart();
+            }
+        }
+
+        function checkSession() {
+            const user = sessionStorage.getItem('gourmetgo_user');
+            if (user) {
+                currentUser = JSON.parse(user);
+                if (currentUser.role === 'seller') {
+                    showPage(sellerDashboardPage);
+                    loadSellerDashboard();
+                } else {
+                    updateUserUI(currentUser);
+                }
+            } else {
+                showPage(userPage);
+            }
+        }
+
+        authForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = authEmailInput.value;
+            const password = authPasswordInput.value;
+            authError.textContent = '';
+
+            try {
+                if (isLoginMode) {
+                    const stmt = db.prepare("SELECT * FROM users WHERE email = :email AND password = :password");
+                    stmt.bind({ ':email': email, ':password': password });
+                    if (stmt.step()) {
+                        const user = stmt.getAsObject();
+                        let sellerId = null;
+                        let restaurantName = null;
+                        if (user.role === 'seller') {
+                            const sellerStmt = db.prepare("SELECT * FROM sellers WHERE user_id = ?");
+                            sellerStmt.bind([user.id]);
+                            if (sellerStmt.step()) {
+                                const seller = sellerStmt.getAsObject();
+                                sellerId = seller.id;
+                                restaurantName = seller.restaurant_name;
+                            }
+                            sellerStmt.free();
+                        }
+                        handleLogin({ id: user.id, email: user.email, role: user.role, sellerId, restaurantName });
+                        closeModal(authModal);
+                    } else {
+                        authError.textContent = "Invalid email or password.";
+                    }
+                    stmt.free();
+                } else {
+                    // Sign Up
+                    const role = document.querySelector('input[name="role"]:checked').value;
+                    const restaurantName = document.getElementById('restaurantName').value;
+
+                    if (role === 'seller' && !restaurantName) {
+                        authError.textContent = 'Restaurant name is required for sellers.';
+                        return;
+                    }
+
+                    // Insert user
+                    const userStmt = db.prepare("INSERT INTO users (email, password, role) VALUES (?, ?, ?)");
+                    userStmt.run([email, password, role]);
+                    const res = db.exec("SELECT last_insert_rowid()");
+                    const newUserId = res[0].values[0][0];
+                    userStmt.free();
+
+                    let sellerId = null;
+                    if (role === 'seller') {
+                        const sellerStmt = db.prepare("INSERT INTO sellers (user_id, restaurant_name) VALUES (?, ?)");
+                        sellerStmt.run([newUserId, restaurantName]);
+                        const sellerRes = db.exec("SELECT last_insert_rowid()");
+                        sellerId = sellerRes[0].values[0][0];
+                        sellerStmt.free();
+                    }
+                    
+                    persistDatabase();
+                    handleLogin({ id: newUserId, email: email, role: role, sellerId, restaurantName });
+                    closeModal(authModal);
+                }
+            } catch (error) {
+                authError.textContent = error.message.includes('UNIQUE constraint failed') ? 'Email already exists.' : 'An error occurred.';
+            }
+        });
+        
+        loginBtn.addEventListener('click', () => { setupAuthModal(true); openModal(authModal); });
+        signupBtn.addEventListener('click', () => { setupAuthModal(false); openModal(authModal); });
+        authToggleBtn.addEventListener('click', () => setupAuthModal(!isLoginMode));
+        logoutBtn.addEventListener('click', handleLogout);
+        sellerLogoutBtn.addEventListener('click', handleLogout);
+        userProfileBtn.addEventListener('click', () => userDropdown.classList.toggle('hidden'));
+
+        authForm.role.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                restaurantNameInput.classList.toggle('hidden', e.target.value !== 'seller');
+                document.getElementById('restaurantName').required = e.target.value === 'seller';
+            });
+        });
+
+        // --- ADDRESS MANAGEMENT (SQL) ---
+
+        function saveUserAddress(addressData) {
+            if (!currentUser) return null;
+            const stmt = db.prepare("INSERT INTO user_addresses (user_id, label, address, city, zip) VALUES (?, ?, ?, ?, ?)");
+            stmt.run([currentUser.id, addressData.label, addressData.address, addressData.city, addressData.zip]);
+            const res = db.exec("SELECT last_insert_rowid()");
+            const newId = res[0].values[0][0];
+            stmt.free();
+            persistDatabase();
+            return { id: newId, ...addressData };
+        }
+
+        function deleteUserAddress(addressId) {
+            if (!currentUser) return;
+            try {
+                db.run("DELETE FROM user_addresses WHERE id = ? AND user_id = ?", [addressId, currentUser.id]);
+                persistDatabase();
+                showToast('Address deleted.', 'success');
+                renderSavedAddresses();
+                
+                if (selectedAddress && selectedAddress.id === addressId) {
+                    selectedAddress = null;
+                    locationText.textContent = 'Select Location';
+                }
+            } catch (e) {
+                console.error("Error deleting address:", e);
+                showToast('Failed to delete address.', 'error');
+            }
+        }
+
+        function getUserAddresses() {
+            if (!currentUser) return [];
+            const stmt = db.prepare("SELECT * FROM user_addresses WHERE user_id = ?");
+            stmt.bind([currentUser.id]);
+            const addresses = [];
+            while(stmt.step()) {
+                addresses.push(stmt.getAsObject());
+            }
+            stmt.free();
+            return addresses;
+        }
+
+        function renderSavedAddresses() {
+            const addresses = getUserAddresses();
+            savedAddressesList.innerHTML = '';
+            if (addresses.length === 0) {
+                savedAddressesList.innerHTML = `<p class="text-sm text-gray-500">No saved addresses.</p>`;
+                return;
+            }
+            addresses.forEach(addr => {
+                const addrEl = document.createElement('div');
+                addrEl.className = 'border rounded-lg saved-address-item flex justify-between items-center';
+                addrEl.innerHTML = `
+                    <div class="address-details p-3 cursor-pointer flex-grow">
+                        <p class="font-bold pointer-events-none">${addr.label}</p>
+                        <p class="text-sm text-gray-600 pointer-events-none">${addr.address}, ${addr.city}, ${addr.zip}</p>
+                    </div>
+                    <button data-id="${addr.id}" class="delete-address-btn text-red-400 hover:text-red-600 p-3 flex-shrink-0">
+                        <i class="fas fa-trash-alt pointer-events-none"></i>
+                    </button>
+                `;
+                addrEl.querySelector('.address-details').addEventListener('click', () => {
+                    selectedAddress = addr;
+                    locationText.textContent = addr.label;
+                    showPage(userPage);
+                });
+                savedAddressesList.appendChild(addrEl);
+            });
+        }
+
+        newAddressForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newAddrData = {
+                label: document.getElementById('addressLabel').value,
+                address: document.getElementById('manualAddressInput').value,
+                city: document.getElementById('manualCityInput').value,
+                zip: document.getElementById('manualZipInput').value
+            };
+            const newAddr = saveUserAddress(newAddrData);
+            
+            // Auto-select the newly added address
+            selectedAddress = newAddr;
+            locationText.textContent = newAddr.label;
+            
+            showToast('Address saved and selected!');
+            newAddressForm.reset();
+            showPage(userPage);
+        });
+        
+        // --- DATABASE CART & ORDERS (SQL) ---
+
+        function saveCartToDb() {
+            if (!currentUser || currentUser.role !== 'user') return;
+            db.run("DELETE FROM carts WHERE user_id = ?", [currentUser.id]);
+            const stmt = db.prepare("INSERT INTO carts (user_id, item_id, quantity) VALUES (?, ?, ?)");
+            cart.forEach(item => {
+                stmt.run([currentUser.id, item.id, item.quantity]);
+            });
+            stmt.free();
+            persistDatabase();
+        }
+
+        function loadCartFromDb() {
+            if (!currentUser || currentUser.role !== 'user') return;
+            cart = [];
+            const stmt = db.prepare("SELECT c.item_id, c.quantity, p.* FROM carts c JOIN products p ON c.item_id = p.id WHERE c.user_id = ?");
+            stmt.bind([currentUser.id]);
+            while (stmt.step()) {
+                const row = stmt.getAsObject();
+                cart.push({ ...row, id: row.item_id });
+            }
+            stmt.free();
+            updateCartCounter();
+            renderCart();
+        }
+
+        function placeOrder() {
+            if (!currentUser) {
+                showToast('Please log in to place an order.', 'error');
+                return;
+            }
+            
+            const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0) * 1.08;
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            let amountPaidCash = 0;
+            let amountPaidOnline = total;
+            let finalPaymentMethod = paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1);
+
+            if(splitPaymentCheckbox.checked) {
+                amountPaidCash = parseFloat(cashAmountInput.value) || 0;
+                if (amountPaidCash <= 0 || amountPaidCash >= total) {
+                    showToast('Cash amount for split payment must be greater than 0 and less than total.', 'error');
+                    placeOrderBtn.disabled = false;
+                    placeOrderBtn.innerHTML = 'Place Order';
+                    return;
+                }
+                amountPaidOnline = total - amountPaidCash;
+                finalPaymentMethod = `Split (Cash + ${finalPaymentMethod})`;
+            } else if (paymentMethod === 'cash') {
+                amountPaidCash = total;
+                amountPaidOnline = 0;
+            }
+
+            const orderData = {
+                userId: currentUser.id,
+                total: total,
+                address: document.getElementById('address').value,
+                city: document.getElementById('city').value,
+                zip: document.getElementById('zip').value,
+                paymentMethod: finalPaymentMethod,
+                amountPaidOnline: amountPaidOnline,
+                amountPaidCash: amountPaidCash,
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                const orderStmt = db.prepare("INSERT INTO orders (user_id, address, city, zip, total, payment_method, amount_paid_online, amount_paid_cash, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                orderStmt.run([orderData.userId, orderData.address, orderData.city, orderData.zip, orderData.total, orderData.paymentMethod, orderData.amountPaidOnline, orderData.amountPaidCash, orderData.createdAt]);
+                orderStmt.free();
+
+                const res = db.exec("SELECT last_insert_rowid()");
+                const orderId = res[0].values[0][0];
+
+                const itemStmt = db.prepare("INSERT INTO order_items (order_id, item_id, seller_id, name, price, quantity) VALUES (?, ?, ?, ?, ?, ?)");
+                cart.forEach(item => {
+                    itemStmt.run([orderId, item.id, item.seller_id, item.name, item.price, item.quantity]);
+                });
+                itemStmt.free();
+
+                db.run("DELETE FROM carts WHERE user_id = ?", [currentUser.id]);
+                persistDatabase();
+
+                let summaryHtml = `
+                    <p><strong>Delivery to:</strong> ${orderData.address}</p>
+                    <p class="font-bold my-2"><strong>Total Bill:</strong> ₹${orderData.total.toFixed(2)}</p>
+                    <p class="text-sm"><strong>Payment Method:</strong> ${orderData.paymentMethod}</p>
+                    ${orderData.amountPaidCash > 0 ? `<p class="text-sm"><strong>Paid in Cash:</strong> ₹${orderData.amountPaidCash.toFixed(2)}</p>` : ''}
+                    ${orderData.amountPaidOnline > 0 ? `<p class="text-sm"><strong>Paid Online:</strong> ₹${orderData.amountPaidOnline.toFixed(2)}</p>` : ''}
+                    <hr class="my-2"><h4 class="font-semibold mb-1">Items:</h4><ul>`;
+                cart.forEach(item => {
+                    summaryHtml += `<li class="flex justify-between"><span>${item.quantity} x ${item.name}</span> <span>₹${(item.quantity * item.price).toFixed(2)}</span></li>`;
+                });
+                summaryHtml += '</ul>';
+                confirmationOrderSummary.innerHTML = summaryHtml;
+
+                closeModal(checkoutModal);
+                showPage(orderConfirmationPage);
+                
+                cart = [];
+                updateCartCounter();
+                checkoutForm.reset();
+                document.getElementById('email').value = currentUser.email;
+
+            } catch (e) {
+                console.error("Error placing order: ", e);
+                showToast('Failed to place order. Please try again.', 'error');
+            } finally {
+                placeOrderBtn.disabled = false;
+                placeOrderBtn.innerHTML = 'Place Order';
+            }
+        }
+
+        function showOrderHistory() {
+            if (!currentUser) return;
+            
+            const ordersStmt = db.prepare("SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC");
+            const orders = [];
+            ordersStmt.bind([currentUser.id]);
+            while(ordersStmt.step()) {
+                orders.push(ordersStmt.getAsObject());
+            }
+            ordersStmt.free();
+            
+            orderHistoryContent.innerHTML = '';
+            if (orders.length === 0) {
+                orderHistoryContent.innerHTML = '<p class="text-center text-gray-500 py-8">You have no past orders.</p>';
+            } else {
+                orders.forEach(order => {
+                    const orderDate = new Date(order.created_at).toLocaleDateString();
+                    const orderElement = document.createElement('div');
+                    orderElement.className = 'border rounded-lg p-4 mb-4';
+                    
+                    const itemsStmt = db.prepare("SELECT * FROM order_items WHERE order_id = ?");
+                    let itemsHtml = '';
+                    itemsStmt.bind([order.id]);
+                    while(itemsStmt.step()){
+                        const item = itemsStmt.getAsObject();
+                        itemsHtml += `<li>${item.quantity} x ${item.name}</li>`;
+                    }
+                    itemsStmt.free();
+
+                    orderElement.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-bold">Order ID: ${order.id}</p>
+                                <p class="text-sm text-gray-500">Placed on: ${orderDate}</p>
+                                 <p class="text-sm text-gray-500 mt-1"><strong>Payment:</strong> ${order.payment_method}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-lg">₹${order.total.toFixed(2)}</p>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Placed</span>
+                            </div>
+                        </div>
+                        <hr class="my-2">
+                        <p class="text-sm"><strong>Delivering to:</strong> ${order.address}</p>
+                        <ul class="text-sm list-disc list-inside mt-2">${itemsHtml}</ul>
+                    `;
+                    orderHistoryContent.appendChild(orderElement);
+                });
+            }
+            openModal(orderHistoryModal);
+        }
+        
+        orderHistoryBtn.addEventListener('click', showOrderHistory);
+
+        // --- RENDER & FILTER FUNCTIONS ---
+        
+        function renderMenuItems() {
+            const stmt = db.prepare("SELECT p.*, s.restaurant_name FROM products p JOIN sellers s ON p.seller_id = s.id");
+            const products = [];
+            while(stmt.step()) {
+                products.push(stmt.getAsObject());
+            }
+            stmt.free();
+
+            let filteredItems = products;
+            if (currentDietFilter !== 'all') {
+                filteredItems = products.filter(item => item.type === currentDietFilter);
+            }
+
+            const searchTerm = searchInput.value.toLowerCase();
+            if (searchTerm) {
+                filteredItems = filteredItems.filter(item => 
+                    item.name.toLowerCase().includes(searchTerm) || 
+                    item.category.toLowerCase().includes(searchTerm) ||
+                    item.restaurant_name.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            menuItemsContainer.innerHTML = '';
+            if (filteredItems.length === 0) {
+                noResultsDiv.classList.remove('hidden');
+            } else {
+                noResultsDiv.classList.add('hidden');
+                filteredItems.forEach(item => {
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'bg-white rounded-lg shadow-md overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border';
+                    itemElement.innerHTML = `
+                        <img src="${item.image}" alt="${item.name}" class="w-full h-48 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/300x200/cccccc/ffffff?text=Image+Not+Found';">
+                        <div class="p-4">
+                            <h3 class="text-xl font-semibold mb-1">${item.name}</h3>
+                            <p class="text-xs text-slate-500 mb-2">by ${item.restaurant_name}</p>
+                            <div class="flex justify-between items-baseline mb-3">
+                                <p class="text-sm text-slate-500">${item.category}</p>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full ${item.type === 'veg' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${item.type}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-lg font-bold text-orange-600">₹${item.price.toFixed(2)}</span>
+                                <button data-id="${item.id}" class="add-to-cart-btn btn-secondary px-4 py-2 rounded-lg text-sm">Add to Cart</button>
+                            </div>
+                        </div>
+                    `;
+                    menuItemsContainer.appendChild(itemElement);
+                });
+            }
+        }
+        
+        // --- CART & BILLING ---
+
+        function renderCart() {
+            cartContent.innerHTML = '';
+            if (cart.length === 0) {
+                cartContent.innerHTML = '<p class="text-center text-slate-500 py-8">Your cart is empty.</p>';
+                cartFooter.innerHTML = '';
+                return;
+            }
+
+            cart.forEach(item => {
+                const cartItemElement = document.createElement('div');
+                cartItemElement.className = 'flex items-center justify-between py-4 border-b';
+                cartItemElement.innerHTML = `
+                    <div class="flex items-center">
+                        <img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-cover rounded-md mr-4">
+                        <div>
+                            <h4 class="font-semibold">${item.name}</h4>
+                            <p class="text-slate-500">₹${item.price.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <button data-id="${item.id}" class="quantity-btn decrease-qty px-2 py-1 rounded-l-md border">-</button>
+                        <span class="px-3 py-1 border-t border-b">${item.quantity}</span>
+                        <button data-id="${item.id}" class="quantity-btn increase-qty px-2 py-1 rounded-r-md border">+</button>
+                        <button data-id="${item.id}" class="remove-item text-red-500 hover:text-red-700 ml-4"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                cartContent.appendChild(cartItemElement);
+            });
+            
+            renderCartSummary();
+        }
+        
+        function renderCartSummary() {
+            const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            const tax = subtotal * 0.08;
+            const total = subtotal + tax;
+
+            cartFooter.innerHTML = `
+                <div class="space-y-2 mb-4">
+                    <div class="flex justify-between"><span>Subtotal</span><span>₹${subtotal.toFixed(2)}</span></div>
+                    <div class="flex justify-between"><span>Tax (8%)</span><span>₹${tax.toFixed(2)}</span></div>
+                    <div class="flex justify-between font-bold text-lg"><span>Total</span><span>₹${total.toFixed(2)}</span></div>
+                </div>
+                <button id="checkoutBtn" class="btn-primary w-full py-3 px-4 rounded-lg">Proceed to Checkout</button>
+            `;
+            
+            document.getElementById('checkoutBtn').addEventListener('click', openCheckoutModal);
+        }
+
+        function addToCart(itemId) {
+            const stmt = db.prepare("SELECT * FROM products WHERE id = ?");
+            stmt.bind([itemId]);
+            if (stmt.step()) {
+                const product = stmt.getAsObject();
+                const itemInCart = cart.find(item => item.id === itemId);
+                if (itemInCart) {
+                    itemInCart.quantity++;
+                } else {
+                    cart.push({ ...product, quantity: 1 });
+                }
+                updateCartCounter();
+                showToast('Item added to cart!');
+                saveCartToDb();
+            }
+            stmt.free();
+        }
+        
+        function updateQuantity(itemId, change) {
+            const itemInCart = cart.find(item => item.id === itemId);
+            if (itemInCart) {
+                itemInCart.quantity += change;
+                if (itemInCart.quantity <= 0) {
+                    removeFromCart(itemId);
+                } else {
+                     renderCart();
+                     updateCartCounter();
+                     saveCartToDb();
+                }
+            }
+        }
+        
+        function removeFromCart(itemId) {
+            cart = cart.filter(item => item.id !== itemId);
+            renderCart();
+            updateCartCounter();
+            saveCartToDb();
+        }
+
+        function updateCartCounter() {
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartCounter.textContent = totalItems;
+        }
+
+        // --- MODAL & UI LOGIC ---
+
+        function openModal(modalElement) {
+            modalElement.classList.remove('hidden');
+            setTimeout(() => modalElement.querySelector('.modal-content').classList.remove('scale-95'), 10);
+        }
+
+        function closeModal(modalElement) {
+            modalElement.querySelector('.modal-content').classList.add('scale-95');
+            setTimeout(() => modalElement.classList.add('hidden'), 300);
+        }
+        
+        function openCartModal() {
+            renderCart();
+            openModal(cartModal);
+        }
+
+        function openCheckoutModal() {
+            if (!currentUser) {
+                showToast('Please log in to proceed.', 'error');
+                openModal(authModal);
+                return;
+            }
+            if (!selectedAddress) {
+                showToast('Please select a delivery location first.', 'error');
+                return;
+            }
+            if (cart.length === 0) {
+                showToast('Your cart is empty.', 'error');
+                return;
+            }
+            
+            document.getElementById('address').value = selectedAddress.address;
+            document.getElementById('city').value = selectedAddress.city;
+            document.getElementById('zip').value = selectedAddress.zip;
+
+            updatePaymentForms();
+            updateSplitPaymentView();
+
+            closeModal(cartModal);
+            openModal(checkoutModal);
+        }
+
+        checkoutForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            
+            placeOrderBtn.disabled = true;
+            placeOrderBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Processing Payment...`;
+
+            if (paymentMethod === 'cash') {
+                placeOrder();
+            } else {
+                // Simulate online payment processing
+                setTimeout(() => {
+                    placeOrder();
+                }, 2000);
+            }
+        });
+
+        function showToast(message, type = 'success') {
+            toast.textContent = message;
+            toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg transition-opacity duration-300 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+            }, 3000);
+        }
+
+        // --- PAYMENT LOGIC ---
+        function updatePaymentForms() {
+            const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            
+            cardPaymentForm.classList.add('hidden');
+            upiPaymentForm.classList.add('hidden');
+            netbankingPaymentForm.classList.add('hidden');
+            cashPaymentForm.classList.add('hidden');
+            
+            if (selectedMethod === 'cash') {
+                splitPaymentContainer.classList.add('hidden');
+                splitPaymentCheckbox.checked = false;
+                splitPaymentDetails.classList.add('hidden');
+            } else {
+                splitPaymentContainer.classList.remove('hidden');
+            }
+
+            if (selectedMethod === 'card') cardPaymentForm.classList.remove('hidden');
+            else if (selectedMethod === 'upi') upiPaymentForm.classList.remove('hidden');
+            else if (selectedMethod === 'netbanking') netbankingPaymentForm.classList.remove('hidden');
+            else if (selectedMethod === 'cash') cashPaymentForm.classList.remove('hidden');
+        }
+
+        function updateSplitPaymentView() {
+            if (splitPaymentCheckbox.checked) {
+                splitPaymentDetails.classList.remove('hidden');
+                const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0) * 1.08;
+                const cashAmount = parseFloat(cashAmountInput.value) || 0;
+                const remaining = total - cashAmount;
+
+                splitTotalBillSpan.textContent = `₹${total.toFixed(2)}`;
+                splitRemainingOnlineSpan.textContent = `₹${remaining.toFixed(2)}`;
+            } else {
+                splitPaymentDetails.classList.add('hidden');
+            }
+        }
+
+        paymentOptions.addEventListener('change', updatePaymentForms);
+        splitPaymentCheckbox.addEventListener('change', updateSplitPaymentView);
+        cashAmountInput.addEventListener('input', updateSplitPaymentView);
+
+
+        // --- SELLER DASHBOARD LOGIC ---
+        function loadSellerDashboard() {
+            if (!currentUser || currentUser.role !== 'seller') return;
+            sellerRestaurantName.textContent = currentUser.restaurantName;
+            renderSellerProducts();
+            renderSellerOrders();
+        }
+
+        addProductForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const product = {
+                seller_id: currentUser.sellerId,
+                name: document.getElementById('productName').value,
+                price: parseFloat(document.getElementById('productPrice').value),
+                category: document.getElementById('productCategory').value,
+                image: document.getElementById('productImage').value,
+                type: document.querySelector('input[name="productType"]:checked').value
+            };
+
+            const stmt = db.prepare("INSERT INTO products (seller_id, name, price, category, image, type) VALUES (?, ?, ?, ?, ?, ?)");
+            stmt.run([product.seller_id, product.name, product.price, product.category, product.image, product.type]);
+            stmt.free();
+            persistDatabase();
+            
+            addProductForm.reset();
+            showToast('Product added successfully!');
+            renderSellerProducts();
+        });
+
+        function renderSellerProducts() {
+            if (!currentUser || !currentUser.sellerId) return;
+            const stmt = db.prepare("SELECT * FROM products WHERE seller_id = ?");
+            stmt.bind([currentUser.sellerId]);
+            sellerProductsList.innerHTML = '';
+            while(stmt.step()) {
+                const product = stmt.getAsObject();
+                const productEl = document.createElement('div');
+                productEl.className = 'flex justify-between items-center border-b pb-2';
+                productEl.innerHTML = `
+                    <div>
+                        <p class="font-semibold">${product.name}</p>
+                        <p class="text-sm text-slate-500">₹${product.price.toFixed(2)}</p>
+                    </div>
+                    <span class="text-xs font-semibold px-2 py-1 rounded-full ${product.type === 'veg' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${product.type}</span>
+                `;
+                sellerProductsList.appendChild(productEl);
+            }
+            stmt.free();
+        }
+
+        function renderSellerOrders() {
+            if (!currentUser || !currentUser.sellerId) return;
+            const stmt = db.prepare(`
+                SELECT oi.*, o.address, o.city, o.created_at 
+                FROM order_items oi 
+                JOIN orders o ON oi.order_id = o.id 
+                WHERE oi.seller_id = ? 
+                ORDER BY o.created_at DESC
+            `);
+            stmt.bind([currentUser.sellerId]);
+            sellerOrdersList.innerHTML = '';
+             if (!stmt.step()) {
+                sellerOrdersList.innerHTML = '<p class="text-sm text-slate-500">No orders yet.</p>';
+            } else {
+                // Reset cursor and re-execute to loop from the beginning
+                stmt.reset();
+                while(stmt.step()) {
+                    const orderItem = stmt.getAsObject();
+                    const orderDate = new Date(orderItem.created_at).toLocaleString();
+                    const orderEl = document.createElement('div');
+                    orderEl.className = 'border-b pb-3';
+                    orderEl.innerHTML = `
+                        <p class="font-semibold">${orderItem.quantity} x ${orderItem.name}</p>
+                        <p class="text-sm text-slate-600">To: ${orderItem.address}, ${orderItem.city}</p>
+                        <p class="text-xs text-slate-400">On: ${orderDate}</p>
+                    `;
+                    sellerOrdersList.appendChild(orderEl);
+                }
+            }
+            stmt.free();
+        }
+
+
+        // --- EVENT LISTENERS ---
+        searchInput.addEventListener('input', renderMenuItems);
+        cartButton.addEventListener('click', openCartModal);
+        closeCart.addEventListener('click', () => closeModal(cartModal));
+        closeCheckout.addEventListener('click', () => closeModal(checkoutModal));
+        closeAuth.addEventListener('click', () => closeModal(authModal));
+        closeOrderHistory.addEventListener('click', () => closeModal(orderHistoryModal));
+
+        locationBtn.addEventListener('click', () => {
+            if (!currentUser) {
+                showToast('Please log in to manage locations.', 'error');
+                openModal(authModal);
+                return;
+            }
+            renderSavedAddresses();
+            showPage(locationPage);
+        });
+        backToMenuBtn.addEventListener('click', () => showPage(userPage));
+        
+        savedAddressesList.addEventListener('click', (e) => {
+            const deleteBtn = e.target.closest('.delete-address-btn');
+            if (deleteBtn) {
+                const addressId = parseInt(deleteBtn.dataset.id);
+                deleteUserAddress(addressId);
+            }
+        });
+
+        continueShoppingBtn.addEventListener('click', () => {
+            showPage(userPage);
+            placeOrderBtn.disabled = false;
+            placeOrderBtn.innerHTML = 'Place Order';
+        });
+        
+        dietFilterContainer.addEventListener('click', e => {
+            const target = e.target.closest('.filter-btn');
+            if (!target) return;
+            currentDietFilter = target.dataset.filter;
+            dietFilterContainer.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            target.classList.add('active');
+            renderMenuItems();
+        });
+
+        menuItemsContainer.addEventListener('click', e => {
+            if (e.target.classList.contains('add-to-cart-btn')) {
+                addToCart(parseInt(e.target.dataset.id));
+            }
+        });
+        
+        cartContent.addEventListener('click', e => {
+            const button = e.target.closest('button');
+            if (!button) return;
+            const itemId = parseInt(button.dataset.id);
+
+            if (button.classList.contains('increase-qty')) updateQuantity(itemId, 1);
+            if (button.classList.contains('decrease-qty')) updateQuantity(itemId, -1);
+            if (button.classList.contains('remove-item')) removeFromCart(itemId);
+        });
+        
+        // Close modals on outside click
+        [authModal, cartModal, checkoutModal, orderHistoryModal].forEach(modal => {
+            modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
+        });
+
+        // --- INITIALIZATION ---
+        async function main() {
+            await initDatabase();
+            checkSession();
+            renderMenuItems();
+        }
+        main();
+    </script>
+
+</body>
+</html>
